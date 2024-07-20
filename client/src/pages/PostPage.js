@@ -3,15 +3,37 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { formatISO9075 } from "date-fns";
 import { UserContext } from "../UserContext";
 import axios from "axios";
-import {Button} from 'flowbite-react';
-
+import { Button, Label, Textarea } from "flowbite-react";
 
 export default function PostPage() {
   const [postInfo, setPostInfo] = useState(null);
   const { userInfo } = useContext(UserContext);
   const { id } = useParams();
-
+  const [comment, setComment] = useState("");
   const navigate = useNavigate();
+
+  const handleSubmitComment = async (e) => {
+    e.preventDefault();
+    const res = await fetch("http://localhost:4000/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content: comment, id, userId: userInfo.id }),
+    });
+    if(res.ok){
+const data = await res.json();
+console.log(data);
+    }
+    else{
+      console.error("Error creating comment");
+    }
+    // if(res)
+  };
+
+  const handleCommentChange=(e)=>{
+    setComment(e.target.value)
+  }
 
   useEffect(() => {
     fetch(`http://localhost:4000/post/${id}`).then((response) => {
@@ -19,8 +41,7 @@ export default function PostPage() {
         setPostInfo(postInfo);
       });
     });
-  }, []);
-
+  }, [id]);
   if (!postInfo) return "";
 
   return (
@@ -37,7 +58,7 @@ export default function PostPage() {
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-6 h-6"
+              className="h-6 w-6"
             >
               <path
                 strokeLinecap="round"
@@ -52,19 +73,60 @@ export default function PostPage() {
       <div className="image">
         <img src={`http://localhost:4000/${postInfo.cover}`} alt="" />
       </div>
+      <div>{postInfo.comment > 1 && <></>}</div>
       <div
         className="content"
         dangerouslySetInnerHTML={{ __html: postInfo.content }}
       />
-
-      <h3>comments</h3>
-
-      {userInfo.id && (
+      {userInfo.id ? (
         <>
-          <input type="text-box" />
-          
-          
+          <div>
+            <p>
+              Signed in as :
+              <span className="text-cyan-600 hover:underline">
+                @{postInfo.author.username}
+              </span>
+            </p>
+          </div>
+          {/* <div className="max-w-md">
+            <div className="mb-2 block">
+              <Label htmlFor="comment" value="Your message" />
+            </div>
+            <Textarea
+              id="comment"
+              placeholder="Leave a comment..."
+              required
+              rows={4}
+            />
+          </div> */}
         </>
+      ) : (
+        <>
+          <div className="flex gap-3 text-teal-500">
+            <p className="">
+              You must be signed in to comment/createPost.
+              <Link
+                to={"/login"}
+                className="gap-3 text-xl text-blue-900 hover:underline"
+              >
+                Login
+              </Link>
+            </p>
+          </div>
+        </>
+      )}
+      {userInfo.id && (
+        <form
+          onSubmit={handleSubmitComment}
+          className="rounded-md border border-teal-500 p-3"
+        >
+          <Textarea placeholder="Add a comment.." rows="3"  value={comment} onChange={handleCommentChange}/>
+          <div className="mt-5 flex items-center justify-between">
+            <Button outline gradientDuoTone="purpleToBlue" type="submit">
+              Submit
+            </Button>
+          </div>
+        </form>
       )}
     </div>
   );

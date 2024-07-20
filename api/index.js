@@ -9,20 +9,16 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const dotenv = require("dotenv");
-
+const commentRoute = require("./routes/comment.route.js");
 dotenv.config();
-
 const app = express();
 const uploadMiddleware = multer({ dest: "uploads/" });
 const fs = require("fs");
-
 const secret = process.env.secret;
-
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(__dirname + "/uploads"));
-
 mongoose
   .connect(process.env.MONGO_URL)
   .then(() => {
@@ -31,10 +27,11 @@ mongoose
   .catch((err) => {
     console.error("MongoDB connection error", err);
   });
-
 app.get("/test", (req, res) => {
   res.json("test ok");
 });
+
+
 
 app.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
@@ -50,6 +47,8 @@ app.post("/register", async (req, res) => {
     res.status(400).json({ error: "Registration failed", details: e.message });
   }
 });
+
+
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -87,6 +86,8 @@ app.post("/login", async (req, res) => {
   }
 });
 
+
+
 app.get("/profile", (req, res) => {
   const { token } = req.cookies;
   try {
@@ -100,19 +101,21 @@ app.get("/profile", (req, res) => {
   }
 });
 
+
 app.post("/logout", (req, res) => {
   res.cookie("token", "").json("ok");
 });
 
-app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
- if (req.file) {
-   const { originalname, path } = req.file;
-   const parts = originalname.split(".");
-   const ext = parts[parts.length - 1];
-   newPath = path + "." + ext;
-   fs.renameSync(path, newPath);
- }
 
+
+app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
+  if (req.file) {
+    const { originalname, path } = req.file;
+    const parts = originalname.split(".");
+    const ext = parts[parts.length - 1];
+    newPath = path + "." + ext;
+    fs.renameSync(path, newPath);
+  }
   const { token } = req.cookies;
   try {
     jwt.verify(token, secret, async (err, info) => {
@@ -133,6 +136,8 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
   }
 });
 
+app.use("/create", commentRoute);
+
 app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
   let newPath = null;
   if (req.file) {
@@ -142,7 +147,6 @@ app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
     newPath = path + "." + ext;
     fs.renameSync(path, newPath);
   }
-
   const { token } = req.cookies;
   try {
     jwt.verify(token, secret, async (err, info) => {
@@ -154,7 +158,6 @@ app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
       if (!isAuthor) {
         return res.status(400).json({ error: "You are not the author" });
       }
-
       const updatedPost = await Post.findByIdAndUpdate(
         id,
         {
@@ -165,7 +168,6 @@ app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
         },
         { new: true }
       );
-
       res.json(updatedPost);
     });
   } catch (e) {
@@ -173,7 +175,6 @@ app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
     res.status(500).json({ error: "Post update failed", details: e.message });
   }
 });
-
 app.get("/post", async (req, res) => {
   try {
     const posts = await Post.find()
@@ -188,7 +189,6 @@ app.get("/post", async (req, res) => {
       .json({ error: "Failed to fetch posts", details: e.message });
   }
 });
-
 app.get("/post/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -199,7 +199,6 @@ app.get("/post/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch post", details: e.message });
   }
 });
-
 // Global error handler middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -207,7 +206,6 @@ app.use((err, req, res, next) => {
     .status(500)
     .json({ error: "An unexpected error occurred", details: err.message });
 });
-
 app.listen(4000, () => {
   console.log("Server is running on port 4000");
 });
