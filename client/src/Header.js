@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "./UserContext";
 
 export default function Header() {
   const { setUserInfo, userInfo } = useContext(UserContext);
+  const navigate=useNavigate();
   useEffect(() => {
     fetch("http://localhost:4000/profile", {
       credentials: "include",
@@ -20,6 +21,7 @@ export default function Header() {
       method: "POST",
     });
     setUserInfo(null);
+    navigate('/');
   }
 
   const username = userInfo?.username;
@@ -27,7 +29,7 @@ export default function Header() {
   return (
     <header>
       <Link to="/" className="logo">
-        MyBlog
+        StarBuzz.ai Blogs
       </Link>
       <nav>
         {username && (

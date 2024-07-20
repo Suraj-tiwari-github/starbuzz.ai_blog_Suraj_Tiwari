@@ -7,6 +7,8 @@ import { Button, Label, Textarea } from "flowbite-react";
 
 export default function PostPage() {
   const [postInfo, setPostInfo] = useState(null);
+  const [editingComment, setEditingComment] = useState(null);
+  const [updatedCommentContent, setUpdatedCommentContent] = useState("");
   const { userInfo } = useContext(UserContext);
   const { id } = useParams();
   const [comment, setComment] = useState("");
@@ -21,19 +23,61 @@ export default function PostPage() {
       },
       body: JSON.stringify({ content: comment, id, userId: userInfo.id }),
     });
-    if(res.ok){
-const data = await res.json();
-console.log(data);
-    }
-    else{
+    if (res.ok) {
+      const data = await res.json();
+      console.log(data);
+    } else {
       console.error("Error creating comment");
     }
     // if(res)
   };
 
-  const handleCommentChange=(e)=>{
-    setComment(e.target.value)
-  }
+  const handleCommentChange = (e) => {
+    setComment(e.target.value);
+  };
+
+  const handleEditComment = async (e, commentId) => {
+    e.preventDefault();
+    const res = await fetch(`http://localhost:4000/edit/${commentId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content: updatedCommentContent }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      // Update the comment in the UI
+    } else {
+      console.error("Error editing comment");
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    const res = await fetch(
+      `http://localhost:4000/comment/delete/${commentId}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+    if (res.ok) {
+    } else {
+      console.error("Error deleting comment");
+    }
+  };
+
+  const handleEditButtonClick = async (commentId) => {
+    const res = await fetch(`http://localhost:4000/comment/${commentId}`);
+    const data = await res.json();
+    if (res.ok) {
+      setEditingComment(commentId);
+      setUpdatedCommentContent(data.body);
+    } else {
+      console.error("Error fetching comment data");
+    }
+  };
 
   useEffect(() => {
     fetch(`http://localhost:4000/post/${id}`).then((response) => {
@@ -120,7 +164,12 @@ console.log(data);
           onSubmit={handleSubmitComment}
           className="rounded-md border border-teal-500 p-3"
         >
-          <Textarea placeholder="Add a comment.." rows="3"  value={comment} onChange={handleCommentChange}/>
+          <Textarea
+            placeholder="Add a comment.."
+            rows="3"
+            value={comment}
+            onChange={handleCommentChange}
+          />
           <div className="mt-5 flex items-center justify-between">
             <Button outline gradientDuoTone="purpleToBlue" type="submit">
               Submit
