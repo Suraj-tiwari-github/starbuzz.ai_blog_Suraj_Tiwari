@@ -136,7 +136,7 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
   }
 });
 
-app.use("/create", commentRoute);
+app.use("/comments", commentRoute);
 
 app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
   let newPath = null;
@@ -192,7 +192,15 @@ app.get("/post", async (req, res) => {
 app.get("/post/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const postDoc = await Post.findById(id).populate("author", ["username"]);
+    const postDoc = await Post.findById(id)
+      .populate("author", ["username"])
+      .populate({
+        path: "comments",
+        populate: {
+          path: "author",
+          select: "username",
+        },
+      });
     res.json(postDoc);
   } catch (e) {
     console.error(e);

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
@@ -15,10 +16,13 @@ export default function RegisterPage() {
       headers: { "Content-Type": "application/json" },
     });
     if (response.status === 200) {
-      alert("registration successful");
+      // alert("registration successful");
       navigate("/login");
+      return toast.success("registration successful");
+      
     } else {
-      alert("registration failed");
+      // alert("registration failed");
+      return toast.failure("Registration Failed, Try again");
     }
   }
   return (
@@ -26,6 +30,7 @@ export default function RegisterPage() {
       <h1>Register</h1>
       <input
         type="text"
+        required
         placeholder="username"
         value={username}
         onChange={(ev) => setUsername(ev.target.value)}
@@ -34,11 +39,13 @@ export default function RegisterPage() {
         type="email"
         placeholder="email@company.com"
         value={email}
+        required
         onChange={(ev) => setEmail(ev.target.value)}
       />
       <input
         type="password"
         placeholder="password"
+        required
         value={password}
         onChange={(ev) => setPassword(ev.target.value)}
       />

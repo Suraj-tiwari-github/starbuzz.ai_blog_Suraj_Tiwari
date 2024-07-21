@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { UserContext } from "../UserContext";
 import { Button } from "flowbite-react";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -21,9 +22,10 @@ export default function LoginPage() {
       response.json().then((userInfo) => {
         setUserInfo(userInfo);
         setRedirect(true);
+        return toast.success("Successfully Logged-In");
       });
     } else {
-      alert("wrong credentials");
+      return toast.failure("Wrong Credentials Entered");
     }
   }
 

@@ -3,20 +3,24 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { formatISO9075 } from "date-fns";
 import { UserContext } from "../UserContext";
 import axios from "axios";
-import { Button, Label, Textarea } from "flowbite-react";
-
+import { Button, Label, Textarea, Card } from "flowbite-react";
+import toast, { Toaster } from "react-hot-toast";
 export default function PostPage() {
   const [postInfo, setPostInfo] = useState(null);
-  const [editingComment, setEditingComment] = useState(null);
-  const [updatedCommentContent, setUpdatedCommentContent] = useState("");
+
   const { userInfo } = useContext(UserContext);
   const { id } = useParams();
   const [comment, setComment] = useState("");
+  const [render, setRender] = useState(false);
+  const [commentId, setCommentId] = useState("");
   const navigate = useNavigate();
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:4000/create", {
+    if (!userInfo || !userInfo.id) {
+      return toast.error("You must be signed in to comment.");
+    }
+    const res = await fetch("http://localhost:4000/comments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -25,75 +29,52 @@ export default function PostPage() {
     });
     if (res.ok) {
       const data = await res.json();
-      console.log(data);
+      // console.log(data);
+      setComment("");
+      setRender(!render);
+      return toast.success("Comment Added Successfully!");
     } else {
       console.error("Error creating comment");
+      return toast.error("Error Creating Comment.");
     }
     // if(res)
   };
-
   const handleCommentChange = (e) => {
     setComment(e.target.value);
   };
-
-  const handleEditComment = async (e, commentId) => {
-    e.preventDefault();
-    const res = await fetch(`http://localhost:4000/edit/${commentId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ content: updatedCommentContent }),
+  const handleDeleteComment = async (comment) => {
+    let authorId = comment.author._id;
+    let id = comment._id;
+    if (!userInfo || !userInfo.id) {
+      return toast.error("You must be signed in to delete a comment.");
+    }
+    const res = await fetch(`http://localhost:4000/comments/delete/${id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ id, commentId }),
     });
-
     if (res.ok) {
       const data = await res.json();
-      // Update the comment in the UI
-    } else {
-      console.error("Error editing comment");
-    }
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    const res = await fetch(
-      `http://localhost:4000/comment/delete/${commentId}`,
-      {
-        method: "DELETE",
-      },
-    );
-
-    if (res.ok) {
+      toast.success(data.message); 
     } else {
       console.error("Error deleting comment");
+      toast.error("Error deleting comment");
     }
   };
-
-  const handleEditButtonClick = async (commentId) => {
-    const res = await fetch(`http://localhost:4000/comment/${commentId}`);
-    const data = await res.json();
-    if (res.ok) {
-      setEditingComment(commentId);
-      setUpdatedCommentContent(data.body);
-    } else {
-      console.error("Error fetching comment data");
-    }
-  };
-
   useEffect(() => {
     fetch(`http://localhost:4000/post/${id}`).then((response) => {
       response.json().then((postInfo) => {
         setPostInfo(postInfo);
       });
     });
-  }, [id]);
-  if (!postInfo) return "";
+  }, [id, render]);
 
+  if (!postInfo) return "";
   return (
     <div className="post-page">
       <h1>{postInfo.title}</h1>
       <time>{formatISO9075(new Date(postInfo.createdAt))}</time>
       <div className="author">by @{postInfo.author.username}</div>
-      {userInfo.id === postInfo.author._id && (
+      {userInfo && userInfo.id === postInfo.author._id && (
         <div className="edit-row">
           <Link className="edit-btn" to={`/edit/${postInfo._id}`}>
             <svg
@@ -117,36 +98,13 @@ export default function PostPage() {
       <div className="image">
         <img src={`http://localhost:4000/${postInfo.cover}`} alt="" />
       </div>
-      <div>{postInfo.comment > 1 && <></>}</div>
       <div
         className="content"
         dangerouslySetInnerHTML={{ __html: postInfo.content }}
       />
-      {userInfo.id ? (
+      {!userInfo && (
         <>
-          <div>
-            <p>
-              Signed in as :
-              <span className="text-cyan-600 hover:underline">
-                @{postInfo.author.username}
-              </span>
-            </p>
-          </div>
-          {/* <div className="max-w-md">
-            <div className="mb-2 block">
-              <Label htmlFor="comment" value="Your message" />
-            </div>
-            <Textarea
-              id="comment"
-              placeholder="Leave a comment..."
-              required
-              rows={4}
-            />
-          </div> */}
-        </>
-      ) : (
-        <>
-          <div className="flex gap-3 text-teal-500">
+          <div className="mb-10 flex gap-3 text-teal-500">
             <p className="">
               You must be signed in to comment/createPost.
               <Link
@@ -159,11 +117,13 @@ export default function PostPage() {
           </div>
         </>
       )}
-      {userInfo.id && (
-        <form
-          onSubmit={handleSubmitComment}
-          className="rounded-md border border-teal-500 p-3"
-        >
+      <div className="mb-4 flex items-center justify-between">
+        <h5 className="text-xl font-bold leading-none text-gray-900 dark:text-white">
+          Comments:
+        </h5>
+      </div>
+      {userInfo && (
+        <form onSubmit={handleSubmitComment} className="mb-9">
           <Textarea
             placeholder="Add a comment.."
             rows="3"
@@ -176,6 +136,28 @@ export default function PostPage() {
             </Button>
           </div>
         </form>
+      )}
+      {postInfo.comments.length > 0 && (
+        <>
+          <div className="rounded-md border border-teal-500 p-3">
+            {console.log(postInfo.comments)}
+            {postInfo.comments.map((comment) => (
+              <div key={comment._id} className="comment">
+                {console.log(comment)}
+                <Card className="mb-4">
+                  <div>
+                    <div className="text-sm font-bold">
+                      @{comment.author ? comment.author.username : "Unknown"}
+
+                    </div>
+                    <p>{comment.body}</p>
+                    
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
