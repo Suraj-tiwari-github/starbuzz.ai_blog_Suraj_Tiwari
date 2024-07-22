@@ -208,6 +208,22 @@ app.get("/post/:id", async (req, res) => {
   }
 });
 
+app.delete("/post/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deletedPost = await Post.findByIdAndDelete(id);
+    if (!deletedPost) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    res.json({ message: "Post deleted successfully" });
+  } catch (e) {
+    console.error(e);
+    res
+      .status(500)
+      .json({ error: "Failed to delete post", details: e.message });
+  }
+});
+
 // Global error handler middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

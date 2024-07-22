@@ -1,5 +1,5 @@
 import { Link,useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect} from "react";
 import { UserContext } from "./UserContext";
 import toast from "react-hot-toast";
 
@@ -27,7 +27,6 @@ export default function Header() {
   }
 
   const username = userInfo?.username;
-
   return (
     <header>
       <Link to="/" className="logo">
