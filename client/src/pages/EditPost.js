@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import Editor from "../Editor";
+import toast from "react-hot-toast";
 
 export default function EditPost() {
   const { id } = useParams();
@@ -37,6 +38,7 @@ export default function EditPost() {
     });
     if (response.ok) {
       setRedirect(true);
+      return toast.success("Successfully Edited Post");
     }
   }
 
@@ -49,11 +51,13 @@ export default function EditPost() {
       <input
         type="title"
         placeholder={"Title"}
+        required
         value={title}
         onChange={(ev) => setTitle(ev.target.value)}
       />
       <input
         type="summary"
+        required
         placeholder={"Summary"}
         value={summary}
         onChange={(ev) => setSummary(ev.target.value)}

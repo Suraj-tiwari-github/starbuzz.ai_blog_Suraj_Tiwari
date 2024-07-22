@@ -27,9 +27,12 @@ export default function RegisterPage() {
   }
   return (
     <form className="register" onSubmit={register}>
-      <h1>Register</h1>
+      <h1 className="mb-5 text-3xl font-bold leading-none text-gray-900 dark:text-white">
+        Register
+      </h1>
       <input
         type="text"
+        className="mb-5"
         required
         placeholder="username"
         value={username}
@@ -38,12 +41,14 @@ export default function RegisterPage() {
       <input
         type="email"
         placeholder="email@company.com"
+        className="mb-5"
         value={email}
         required
         onChange={(ev) => setEmail(ev.target.value)}
       />
       <input
         type="password"
+        className="mb-5"
         placeholder="password"
         required
         value={password}

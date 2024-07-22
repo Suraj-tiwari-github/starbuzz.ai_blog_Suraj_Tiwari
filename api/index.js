@@ -207,6 +207,7 @@ app.get("/post/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch post", details: e.message });
   }
 });
+
 // Global error handler middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

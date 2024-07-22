@@ -150,7 +150,7 @@ export default function PostPage() {
                       @{comment.author ? comment.author.username : "Unknown"}
 
                     </div>
-                    <p>{comment.body}</p>
+                    <p className="mt-1">{comment.body}</p>
                     
                   </div>
                 </Card>

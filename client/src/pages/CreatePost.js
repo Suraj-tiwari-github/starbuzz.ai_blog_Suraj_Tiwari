@@ -3,6 +3,7 @@ import "react-quill/dist/quill.snow.css";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import Editor from "../Editor";
+import toast from "react-hot-toast";
 
 export default function CreatePost() {
   const [title, setTitle] = useState("");
@@ -12,13 +13,14 @@ export default function CreatePost() {
   const [redirect, setRedirect] = useState(false);
   const [error, setError] = useState(null);
 
+
   async function createNewPost(ev) {
     ev.preventDefault();
     setError(null); // Reset error state
 
     if (!files || files.length === 0) {
-      setError("Please fill out all the details");
-      return;
+      return toast.error("Please fill out all the details");
+     
     }
 
     const data = new FormData();
@@ -36,7 +38,11 @@ export default function CreatePost() {
       if (!response.ok) {
         throw new Error("Failed to create post. Please try again.");
       }
-      setRedirect(true);
+      else{
+        setRedirect(true);
+        return toast.success("Successfully created post");
+      }
+      
     } catch (err) {
       setError(err.message);
     }
